@@ -10,7 +10,7 @@ Inspired by the `goldin` `copy-maven-plugin`
 Usage
 -----
 
-```java
+```xml
 <plugin>
     <groupId>ch.mfrey.maven.plugin</groupId>
     <artifactId>copy-maven-plugin</artifactId>
@@ -82,7 +82,7 @@ Usage
 
 Options
 -------
-```
+```xml
 <resource>
 	<directory>${project.build.directory}</directory>
 	<charset>UTF-8</charset>
