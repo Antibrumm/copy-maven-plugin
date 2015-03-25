@@ -7,6 +7,8 @@ Also replaces contents inside the copied files on the fly.
 
 Inspired by the `goldin` `copy-maven-plugin` 
 
+[![Build Status](https://travis-ci.org/Antibrumm/copy-maven-plugin.png)](https://travis-ci.org/Antibrumm/copy-maven-plugin)
+
 Usage
 -----
 
