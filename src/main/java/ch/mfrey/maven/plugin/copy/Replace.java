@@ -10,14 +10,14 @@ public class Replace {
     @Parameter(required = true)
     private String to;
 
-    public Replace(String from, String to) {
+    public Replace() {
+        super();
+    }
+
+    public Replace(final String from, final String to) {
         super();
         this.from = from;
         this.to = to;
-    }
-
-    public Replace() {
-        super();
     }
 
     public String getFrom() {

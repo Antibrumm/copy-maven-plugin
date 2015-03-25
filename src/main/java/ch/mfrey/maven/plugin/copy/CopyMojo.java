@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -100,34 +101,6 @@ public class CopyMojo extends AbstractMojo {
 
     }
 
-    private void logResource(Resource resource, File workingDir) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("----------").append(System.lineSeparator());
-        sb.append("      WorkingDir: ").append(workingDir.getAbsolutePath()).append(System.lineSeparator());
-        sb.append("         Charset: ").append(resource.getCharset()).append(System.lineSeparator());
-        sb.append("            Move: ").append(resource.isMove()).append(System.lineSeparator());
-        sb.append("  WorkOnFullPath: ").append(resource.isWorkOnFullPath()).append(System.lineSeparator());
-        sb.append("        Includes:").append(System.lineSeparator());
-        for (String include : resource.getIncludes()) {
-            sb.append("                  ").append(include).append(System.lineSeparator());
-        }
-        sb.append("        Excludes:").append(System.lineSeparator());
-        for (String exclude : resource.getExcludes()) {
-            sb.append("                  ").append(exclude).append(System.lineSeparator());
-        }
-        sb.append("          Paths:").append(System.lineSeparator());
-        for (Replace r : resource.getPaths()) {
-            sb.append("                  ").append(r.getFrom()).append(" -> ").append(r.getTo())
-                    .append(System.lineSeparator());
-        }
-        sb.append("        Replaces:").append(System.lineSeparator());
-        for (Replace r : resource.getReplaces()) {
-            sb.append("                  ").append(r.getFrom()).append(" -> ").append(r.getTo())
-                    .append(System.lineSeparator());
-        }
-        getLog().info(sb);
-    }
-
     @SuppressWarnings("unchecked")
     public List<File> getFiles(final File workingDir, final Resource resource) throws MojoExecutionException {
         try {
@@ -147,13 +120,24 @@ public class CopyMojo extends AbstractMojo {
         }
         String path = resource.isWorkOnFullPath() ? file.getAbsolutePath() : file.getAbsolutePath().substring(
                 workingDir.getAbsolutePath().length());
+        if (resource.isNormalizePath()) {
+            path = FilenameUtils.normalize(path, true);
+        }
+        getLog().info("---");
+        getLog().info(path);
         for (Replace rename : renames) {
             if (rename.getFrom() == null || rename.getTo() == null) {
                 throw new MojoExecutionException("From and To cannot be NULL: " + rename);
             } else if (!rename.getFrom().equals(rename.getTo())) {
-                path = path.replace(rename.getFrom(), rename.getTo());
+                if (resource.isNormalizePath()) {
+                    path = path.replace(FilenameUtils.normalize(rename.getFrom(), true),
+                            FilenameUtils.normalize(rename.getTo(), true));
+                } else {
+                    path = path.replace(rename.getFrom(), rename.getTo());
+                }
             }
         }
+        getLog().info(path);
         return resource.isWorkOnFullPath() ? path : workingDir.getAbsolutePath() + path;
     }
 
@@ -163,6 +147,36 @@ public class CopyMojo extends AbstractMojo {
 
     public boolean isShowfiles() {
         return showfiles;
+    }
+
+    private void logResource(final Resource resource, final File workingDir) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("----------").append(System.lineSeparator());
+        sb.append("        Resource: ").append(resource.getId()).append(System.lineSeparator());
+        sb.append("      WorkingDir: ").append(workingDir.getAbsolutePath()).append(System.lineSeparator());
+        sb.append("         Charset: ").append(resource.getCharset()).append(System.lineSeparator());
+        sb.append("            Move: ").append(resource.isMove()).append(System.lineSeparator());
+        sb.append("  WorkOnFullPath: ").append(resource.isWorkOnFullPath()).append(System.lineSeparator());
+        sb.append("   NormalizePath: ").append(resource.isNormalizePath()).append(System.lineSeparator());
+        sb.append("        Includes:").append(System.lineSeparator());
+        for (String include : resource.getIncludes()) {
+            sb.append("                  ").append(include).append(System.lineSeparator());
+        }
+        sb.append("        Excludes:").append(System.lineSeparator());
+        for (String exclude : resource.getExcludes()) {
+            sb.append("                  ").append(exclude).append(System.lineSeparator());
+        }
+        sb.append("          Paths:").append(System.lineSeparator());
+        for (Replace r : resource.getPaths()) {
+            sb.append("                  ").append(r.getFrom()).append(" -> ").append(r.getTo())
+                    .append(System.lineSeparator());
+        }
+        sb.append("        Replaces:").append(System.lineSeparator());
+        for (Replace r : resource.getReplaces()) {
+            sb.append("                  ").append(r.getFrom()).append(" -> ").append(r.getTo())
+                    .append(System.lineSeparator());
+        }
+        getLog().info(sb);
     }
 
     public void setResources(final Resource[] resources) {
