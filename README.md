@@ -79,3 +79,32 @@ Usage
 	</executions>
 </plugin>
 ```
+
+Options
+-------
+```
+<resource>
+	<directory>${project.build.directory}</directory>
+	<charset>UTF-8</charset>
+	<move>false</move>
+	<workOnFullPath>false</workOnFullPath>
+	<includes>
+		<include>**/*.*</include>
+	</includes>
+	<excludes>
+		<exclude>none</exclude>
+	</excludes>
+	<paths>
+		<path>
+			<from>a</from>
+			<to>b</to>
+		</path>
+	</paths>
+	<replaces>
+		<replace>
+			<from>a</from>
+			<to>b</to>
+		</replace>
+	</replaces>						
+</resource>
+```
