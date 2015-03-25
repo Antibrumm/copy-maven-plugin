@@ -9,6 +9,12 @@ Inspired by the `goldin` `copy-maven-plugin`
 
 [![Build Status](https://travis-ci.org/Antibrumm/copy-maven-plugin.png)](https://travis-ci.org/Antibrumm/copy-maven-plugin)
 
+Requirements
+------------
+
+ - Java 8
+ - Maven 3.2.0+
+
 Usage
 -----
 
@@ -90,6 +96,7 @@ Options
 	<charset>UTF-8</charset>
 	<move>false</move>
 	<workOnFullPath>false</workOnFullPath>
+	<normalizePath>true</normalizePath>
 	<includes>
 		<include>**/*.*</include>
 	</includes>
@@ -98,14 +105,14 @@ Options
 	</excludes>
 	<paths>
 		<path>
-			<from>a</from>
-			<to>b</to>
+			<from>folder</from>
+			<to>some/more/folders</to>
 		</path>
 	</paths>
 	<replaces>
 		<replace>
-			<from>a</from>
-			<to>b</to>
+			<from>property</from>
+			<to>newname</to>
 		</replace>
 	</replaces>						
 </resource>
