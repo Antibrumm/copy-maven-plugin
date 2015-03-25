@@ -55,7 +55,7 @@ public class CopyMojo extends AbstractMojo {
         } else {
             String content = FileUtils.readFileToString(srcFile, resource.getCharset());
             for (Replace replace : replaces) {
-                content = content.replaceAll(replace.getFrom(), replace.getTo());
+                content = content.replace(replace.getFrom(), replace.getTo());
             }
             FileUtils.writeStringToFile(destFile, content, resource.getCharset());
             if (resource.isMove() && !srcFile.getAbsolutePath().equals(destFile.getAbsolutePath())) {
