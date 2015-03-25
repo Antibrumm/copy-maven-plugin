@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -17,90 +16,6 @@ import org.apache.maven.project.MavenProject;
 
 @Mojo(name = "copy", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class CopyMojo extends AbstractMojo {
-
-    public static class Replace {
-        @Parameter(required = true)
-        private String from;
-
-        @Parameter(required = true)
-        private String to;
-
-        public String getFrom() {
-            return from;
-        }
-
-        public String getTo() {
-            return to;
-        }
-
-        public void setFrom(final String from) {
-            this.from = from;
-        }
-
-        public void setTo(final String to) {
-            this.to = to;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append("Replace [from=").append(from).append(", to=").append(to).append("]");
-            return builder.toString();
-        }
-    }
-
-    public static class Resource extends FileSet {
-
-        /**
-         *
-         */
-        private static final long serialVersionUID = 1L;
-
-        @Parameter(defaultValue = "false")
-        private boolean move;
-
-        @Parameter(required = false)
-        private Replace[] paths;
-
-        @Parameter(required = false)
-        private Replace[] replaces;
-
-        @Parameter(defaultValue = "false")
-        private boolean workOnFullPath;
-
-        public Replace[] getPaths() {
-            return paths == null ? new Replace[0] : paths;
-        }
-
-        public Replace[] getReplaces() {
-            return replaces == null ? new Replace[0] : replaces;
-        }
-
-        public boolean isMove() {
-            return move;
-        }
-
-        public boolean isWorkOnFullPath() {
-            return workOnFullPath;
-        }
-
-        public void setMove(final boolean move) {
-            this.move = move;
-        }
-
-        public void setPaths(final Replace[] paths) {
-            this.paths = paths;
-        }
-
-        public void setReplaces(final Replace[] replaces) {
-            this.replaces = replaces;
-        }
-
-        public void setWorkOnFullPath(final boolean workOnFullPath) {
-            this.workOnFullPath = workOnFullPath;
-        }
-
-    }
 
     @Parameter(defaultValue = "${project.build.directory}", readonly = true)
     private String defaultDir;
@@ -128,8 +43,8 @@ public class CopyMojo extends AbstractMojo {
     }
 
     private void copyFile(final Resource resource, final File srcFile, final File destFile) throws IOException {
-        Replace[] replaces = resource.getReplaces();
-        if (replaces.length == 0) {
+        List<Replace> replaces = resource.getReplaces();
+        if (replaces.isEmpty()) {
             if (srcFile.getAbsolutePath().equals(destFile.getAbsolutePath())) {
                 return;
             } else if (resource.isMove()) {
@@ -138,11 +53,11 @@ public class CopyMojo extends AbstractMojo {
                 FileUtils.copyFile(srcFile, destFile);
             }
         } else {
-            String content = FileUtils.readFileToString(srcFile, "UTF-8");
+            String content = FileUtils.readFileToString(srcFile, resource.getCharset());
             for (Replace replace : replaces) {
-                content = content.replaceAll(replace.from, replace.to);
+                content = content.replaceAll(replace.getFrom(), replace.getTo());
             }
-            FileUtils.writeStringToFile(destFile, content, "UTF-8");
+            FileUtils.writeStringToFile(destFile, content, resource.getCharset());
             if (resource.isMove() && !srcFile.getAbsolutePath().equals(destFile.getAbsolutePath())) {
                 FileUtils.deleteQuietly(srcFile);
             }
@@ -150,7 +65,6 @@ public class CopyMojo extends AbstractMojo {
     }
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-
         try {
             for (Resource resource : getResources()) {
 
@@ -159,26 +73,18 @@ public class CopyMojo extends AbstractMojo {
                     workingDir = new File(project.getBasedir(), resource.getDirectory() == null ? defaultDir
                             : resource.getDirectory());
                 }
-                if (getLog().isInfoEnabled()) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("Resource:\n").append("WorkingDir: ").append(workingDir.getAbsolutePath()).append("\n");
-                    sb.append("  Paths:\n");
-                    for (Replace r : resource.getPaths()) {
-                        sb.append("    ").append(r.getFrom()).append(" -> ").append(r.getTo()).append("\n");
-                    }
-                    sb.append("  Replaces:\n");
-                    for (Replace r : resource.getReplaces()) {
-                        sb.append("    ").append(r.getFrom()).append(" -> ").append(r.getTo()).append("\n");
-                    }
-                    getLog().info(sb);
+                if (isShowfiles() && getLog().isInfoEnabled()) {
+                    logResource(resource, workingDir);
                 }
                 for (File srcFile : getFiles(workingDir, resource)) {
                     String destPath = getNewPath(resource, workingDir, srcFile);
                     File destFile = new File(destPath);
                     if (isShowfiles() && getLog().isInfoEnabled()) {
-                        getLog().info(
-                                System.lineSeparator() + " - " + srcFile.getAbsolutePath() + System.lineSeparator()
-                                        + " + " + destFile.getAbsolutePath());
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(resource.isMove() ? " mv " : " cp ").append(srcFile.getAbsolutePath())
+                                .append(System.lineSeparator());
+                        sb.append("        -> ").append(destFile.getAbsolutePath());
+                        getLog().info(sb);
                     }
                     copyFile(resource, srcFile, destFile);
                 }
@@ -194,6 +100,34 @@ public class CopyMojo extends AbstractMojo {
 
     }
 
+    private void logResource(Resource resource, File workingDir) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("----------").append(System.lineSeparator());
+        sb.append("      WorkingDir: ").append(workingDir.getAbsolutePath()).append(System.lineSeparator());
+        sb.append("         Charset: ").append(resource.getCharset()).append(System.lineSeparator());
+        sb.append("            Move: ").append(resource.isMove()).append(System.lineSeparator());
+        sb.append("  WorkOnFullPath: ").append(resource.isWorkOnFullPath()).append(System.lineSeparator());
+        sb.append("        Includes:").append(System.lineSeparator());
+        for (String include : resource.getIncludes()) {
+            sb.append("                  ").append(include).append(System.lineSeparator());
+        }
+        sb.append("        Excludes:").append(System.lineSeparator());
+        for (String exclude : resource.getExcludes()) {
+            sb.append("                  ").append(exclude).append(System.lineSeparator());
+        }
+        sb.append("          Paths:").append(System.lineSeparator());
+        for (Replace r : resource.getPaths()) {
+            sb.append("                  ").append(r.getFrom()).append(" -> ").append(r.getTo())
+                    .append(System.lineSeparator());
+        }
+        sb.append("        Replaces:").append(System.lineSeparator());
+        for (Replace r : resource.getReplaces()) {
+            sb.append("                  ").append(r.getFrom()).append(" -> ").append(r.getTo())
+                    .append(System.lineSeparator());
+        }
+        getLog().info(sb);
+    }
+
     @SuppressWarnings("unchecked")
     public List<File> getFiles(final File workingDir, final Resource resource) throws MojoExecutionException {
         try {
@@ -207,17 +141,17 @@ public class CopyMojo extends AbstractMojo {
 
     private String getNewPath(final Resource resource, final File workingDir, final File file)
             throws MojoExecutionException {
-        Replace[] renames = resource.getPaths();
-        if (renames.length == 0) {
+        List<Replace> renames = resource.getPaths();
+        if (renames.isEmpty()) {
             return file.getAbsolutePath();
         }
         String path = resource.isWorkOnFullPath() ? file.getAbsolutePath() : file.getAbsolutePath().substring(
                 workingDir.getAbsolutePath().length());
-        for (int i = 0; i < renames.length; i++) {
-            if (renames[i].getFrom() == null || renames[i].getTo() == null) {
-                throw new MojoExecutionException("From and To cannot be NULL: " + renames[i]);
-            } else if (!renames[i].getFrom().equals(renames[i].getTo())) {
-                path = path.replace(renames[i].getFrom(), renames[i].getTo());
+        for (Replace rename : renames) {
+            if (rename.getFrom() == null || rename.getTo() == null) {
+                throw new MojoExecutionException("From and To cannot be NULL: " + rename);
+            } else if (!rename.getFrom().equals(rename.getTo())) {
+                path = path.replace(rename.getFrom(), rename.getTo());
             }
         }
         return resource.isWorkOnFullPath() ? path : workingDir.getAbsolutePath() + path;
