@@ -3,10 +3,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ch.mfrey.maven.plugin</groupId>
 	<artifactId>copy-maven-plugin</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.2</version>
 	<packaging>maven-plugin</packaging>
 	<name>Copy Maven Plugin</name>
-	<description>aven Plugin to copy/move files and replace content in the same time</description>
+	<description>Maven Plugin to copy/move files and replace content in the same time</description>
 	<url>https://github.com/Antibrumm/copy-maven-plugin</url>
 	<licenses>
 		<license>
