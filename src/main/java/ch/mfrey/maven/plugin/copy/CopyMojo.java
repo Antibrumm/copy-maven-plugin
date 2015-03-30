@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.plugin.AbstractMojo;
@@ -48,15 +49,34 @@ public class CopyMojo extends AbstractMojo {
         if (replaces.isEmpty()) {
             if (srcFile.getAbsolutePath().equals(destFile.getAbsolutePath())) {
                 return;
-            } else if (resource.isMove()) {
-                FileUtils.moveFile(srcFile, destFile);
             } else {
-                FileUtils.copyFile(srcFile, destFile);
+                if (destFile.exists()) {
+                    if (resource.isReplaceExisting()) {
+                        destFile.delete();
+                    } else {
+                        throw new FileExistsException(destFile);
+                    }
+                }
+                if (resource.isMove()) {
+                    FileUtils.moveFile(srcFile, destFile);
+                } else {
+                    FileUtils.copyFile(srcFile, destFile);
+                }
             }
         } else {
+            // Read the file and replace its content
             String content = FileUtils.readFileToString(srcFile, resource.getCharset());
             for (Replace replace : replaces) {
                 content = content.replace(replace.getFrom(), replace.getTo());
+            }
+
+            // Write the new file
+            if (destFile.exists()) {
+                if (resource.isReplaceExisting()) {
+                    destFile.delete();
+                } else {
+                    throw new FileExistsException(destFile);
+                }
             }
             FileUtils.writeStringToFile(destFile, content, resource.getCharset());
             if (resource.isMove() && !srcFile.getAbsolutePath().equals(destFile.getAbsolutePath())) {
@@ -96,7 +116,7 @@ public class CopyMojo extends AbstractMojo {
                 }
             }
         } catch (IOException ex) {
-            throw new MojoExecutionException("Could not rename file", ex);
+            throw new MojoExecutionException("Error during CopyMojo", ex);
         }
 
     }
