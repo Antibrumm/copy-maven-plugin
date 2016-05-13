@@ -13,12 +13,6 @@ public class Resource extends FileSet {
      */
     private static final long serialVersionUID = 1L;
 
-    /**
-     * Replace existing files?
-     */
-    @Parameter(required = false)
-    private boolean replaceExisting = false;
-
     @Parameter(defaultValue = "UTF-8")
     private String charset;
 
@@ -33,6 +27,12 @@ public class Resource extends FileSet {
 
     @Parameter(required = false)
     private List<Replace> paths;
+
+    /**
+     * Replace existing files?
+     */
+    @Parameter(required = false)
+    private boolean replaceExisting = false;
 
     @Parameter(required = false)
     private List<Replace> replaces;
@@ -86,6 +86,10 @@ public class Resource extends FileSet {
         return normalizePath;
     }
 
+    public boolean isReplaceExisting() {
+        return replaceExisting;
+    }
+
     public boolean isWorkOnFullPath() {
         return workOnFullPath;
     }
@@ -110,20 +114,16 @@ public class Resource extends FileSet {
         this.paths = paths;
     }
 
+    public void setReplaceExisting(final boolean replaceExisting) {
+        this.replaceExisting = replaceExisting;
+    }
+
     public void setReplaces(final List<Replace> replaces) {
         this.replaces = replaces;
     }
 
     public void setWorkOnFullPath(final boolean workOnFullPath) {
         this.workOnFullPath = workOnFullPath;
-    }
-
-    public boolean isReplaceExisting() {
-        return replaceExisting;
-    }
-
-    public void setReplaceExisting(boolean replaceExisting) {
-        this.replaceExisting = replaceExisting;
     }
 
 }

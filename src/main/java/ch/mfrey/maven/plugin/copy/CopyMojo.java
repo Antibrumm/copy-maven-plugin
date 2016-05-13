@@ -67,7 +67,11 @@ public class CopyMojo extends AbstractMojo {
             // Read the file and replace its content
             String content = FileUtils.readFileToString(srcFile, resource.getCharset());
             for (Replace replace : replaces) {
-                content = content.replace(replace.getFrom(), replace.getTo());
+                if (replace.isRegex()) {
+                    content = content.replaceAll(replace.getFrom(), replace.getTo());
+                } else {
+                    content = content.replace(replace.getFrom(), replace.getTo());
+                }
             }
 
             // Write the new file
@@ -85,6 +89,7 @@ public class CopyMojo extends AbstractMojo {
         }
     }
 
+    @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
             for (Resource resource : getResources()) {

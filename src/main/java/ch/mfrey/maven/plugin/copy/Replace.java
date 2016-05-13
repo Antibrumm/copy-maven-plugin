@@ -7,6 +7,9 @@ public class Replace {
     @Parameter(required = true)
     private String from;
 
+    @Parameter(required = false, defaultValue = "false")
+    private boolean regex;
+
     @Parameter(required = true)
     private String to;
 
@@ -28,8 +31,16 @@ public class Replace {
         return to;
     }
 
+    public boolean isRegex() {
+        return regex;
+    }
+
     public void setFrom(final String from) {
         this.from = from;
+    }
+
+    public void setRegex(final boolean regex) {
+        this.regex = regex;
     }
 
     public void setTo(final String to) {
@@ -39,7 +50,9 @@ public class Replace {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("Replace [from=").append(from).append(", to=").append(to).append("]");
+        builder.append("Replace [from=").append(from).append(", to=").append(to).append(", regex=").append(regex)
+                .append("]");
         return builder.toString();
     }
+
 }
