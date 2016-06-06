@@ -31,6 +31,9 @@ public class CopyMojo extends AbstractMojo {
     @Parameter(defaultValue = "false")
     private boolean showfiles;
 
+    @Parameter(defaultValue = "false", required = false, property = "resources.copy.skip")
+    private boolean skip;
+
     private void cleanupEmptyDirs(final File directory) throws IOException {
         if (directory.isDirectory()) {
             for (File file : directory.listFiles()) {
@@ -91,6 +94,10 @@ public class CopyMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().info("Skipping copy maven plugin execution");
+            return;
+        }
         try {
             for (Resource resource : getResources()) {
 
