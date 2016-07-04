@@ -99,6 +99,10 @@ public class CopyMojo extends AbstractMojo {
             return;
         }
         try {
+            if (getResources() == null || getResources().length == 0) {
+                getLog().warn("No resources were defined to move or copy");
+                return;
+            }
             for (Resource resource : getResources()) {
 
                 File workingDir = new File(resource.getDirectory() == null ? defaultDir : resource.getDirectory());
