@@ -58,8 +58,9 @@ Usage
                         </excludes>
                         <paths>
                             <path>
-                                <from>tmp</from>
-                                <to>output</to>
+                                <from>tmp(\w+)</from>
+                                <to>output$1</to>
+                                <regex>true</regex>
                             </path>
                             <path>
                                 <from>${escaped-groupId-folders}</from>
@@ -93,6 +94,7 @@ Options
 ```xml
 <showfiles>true</showfiles>
 <resource>
+    <skip>false</skip>
     <directory>${project.build.directory}</directory>
     <charset>UTF-8</charset>
     <move>false</move>
@@ -109,12 +111,14 @@ Options
         <path>
             <from>folder</from>
             <to>some/more/folders</to>
+            <regex>false</regex>
         </path>
     </paths>
     <replaces>
         <replace>
             <from>property</from>
             <to>newname</to>
+            <regex>false</regex>
         </replace>
     </replaces>
 </resource>
