@@ -18,6 +18,19 @@ public class CopyMojoTest {
 
     private static final String currentLoc = new File(CopyMojoTest.class.getResource("/").getFile()).getAbsolutePath();
 
+    private void cleanup(final File file) {
+        if (file != null) {
+            try {
+                if (file.exists()) {
+                    file.delete();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
+    }
+
     private void copy() throws MojoExecutionException, MojoFailureException {
         CopyMojo mojo = new CopyMojo();
         mojo.setShowfiles(false);
@@ -26,7 +39,7 @@ public class CopyMojoTest {
         resource.setId("copy");
         resource.addInclude("folder1/**/*.txt");
         resource.setDirectory(currentLoc);
-        resource.addPath(new Replace("folder1", "copy1"));
+        resource.addPath(Replace.asReplace("folder1", "copy1"));
         mojo.setResources(new Resource[] { resource });
 
         mojo.execute();
@@ -44,7 +57,7 @@ public class CopyMojoTest {
         resource.setId("testCopy");
         resource.addInclude("folder1/**/*.txt");
         resource.setDirectory(currentLoc);
-        resource.addPath(new Replace("folder1", "copy1"));
+        resource.addPath(Replace.asReplace("folder1", "copy1"));
         mojo.setResources(new Resource[] { resource });
 
         mojo.execute();
@@ -64,7 +77,8 @@ public class CopyMojoTest {
         resource.setId("testCopy2");
         resource.addInclude("folder1/**/*.txt");
         resource.setDirectory(currentLoc);
-        resource.addPath(new Replace("folder1/folder2", "copy1/copy2")).addPath(new Replace("test1", "test2"));
+        resource.addPath(Replace.asReplace("folder1/folder2", "copy1/copy2"))
+                .addPath(Replace.asReplace("test1", "test2"));
         mojo.setResources(new Resource[] { resource });
 
         mojo.execute();
@@ -84,14 +98,44 @@ public class CopyMojoTest {
         resource.setId("testCopyAndReplace");
         resource.addInclude("folder1/**/*.txt");
         resource.setDirectory(currentLoc);
-        resource.addPath(new Replace("folder1/folder2", "copy1/copy2")).addPath(new Replace("test1", "test2"));
-        resource.addReplace(new Replace("to be modified", "has been modified"));
+        resource.addPath(Replace.asReplace("folder1/folder2", "copy1/copy2"))
+                .addPath(Replace.asReplace("test1", "test2"));
+        resource.addReplace(Replace.asReplace("to be modified", "has been modified"));
         mojo.setResources(new Resource[] { resource });
 
         mojo.execute();
 
         Assert.assertTrue(new File(currentLoc + "/folder1/folder2/test1.txt").exists());
         File file = new File(currentLoc + "/copy1/copy2/test2.txt");
+        Assert.assertTrue(file.exists());
+        String readFileToString = FileUtils.readFileToString(file, resource.getCharset());
+        // file.delete();
+
+        // check if replaced twice
+        int idx = readFileToString.indexOf("has been modified");
+        Assert.assertTrue(idx != -1);
+        Assert.assertTrue(readFileToString.indexOf("has been modified", idx + 1) != -1);
+    }
+
+    @Test
+    public void testCopyAndReplaceRegex() throws MojoExecutionException, MojoFailureException, IOException {
+        CopyMojo mojo = new CopyMojo();
+        mojo.setShowfiles(true);
+
+        Resource resource = new Resource();
+        resource.setId("testCopyAndReplaceRegex");
+        resource.addInclude("folder1/**/*.txt");
+        resource.setDirectory(currentLoc);
+        resource.addPath(
+                Replace.asRegex("folder1/([^/]+)", "copy1/copy$1"))
+                .addPath(Replace.asReplace("test1", "test2"));
+        resource.addReplace(Replace.asRegex("to be m([^d]+)d", "has been m$1d"));
+        mojo.setResources(new Resource[] { resource });
+
+        mojo.execute();
+
+        Assert.assertTrue(new File(currentLoc + "/folder1/folder2/test1.txt").exists());
+        File file = new File(currentLoc + "/copy1/copyfolder2/test2.txt");
         Assert.assertTrue(file.exists());
         String readFileToString = FileUtils.readFileToString(file, resource.getCharset());
         // file.delete();
@@ -114,7 +158,7 @@ public class CopyMojoTest {
         resource.setMove(true);
         resource.addInclude("copy1/**/*.txt");
         resource.setDirectory(currentLoc);
-        resource.addPath(new Replace("folder2", "copy2/copy3/copy4"));
+        resource.addPath(Replace.asReplace("folder2", "copy2/copy3/copy4"));
         mojo.setResources(new Resource[] { resource });
 
         mojo.execute();
@@ -123,6 +167,22 @@ public class CopyMojoTest {
         File file = new File(currentLoc + "/copy1/copy2/copy3/copy4/test1.txt");
         Assert.assertTrue(file.exists());
         file.delete();
+    }
+
+    @Test
+    public void testNothingToDo() throws MojoExecutionException, MojoFailureException {
+        CopyMojo mojo = new CopyMojo();
+        mojo.setShowfiles(true);
+
+        Resource resource = new Resource();
+        resource.setId("testNothingToDo");
+        resource.addInclude("folder1/**/*.txt");
+        resource.setDirectory(currentLoc);
+        mojo.setResources(new Resource[] { resource });
+
+        mojo.execute();
+
+        Assert.assertTrue(new File(currentLoc + "/folder1/folder2/test1.txt").exists());
     }
 
     @Test
@@ -137,7 +197,7 @@ public class CopyMojoTest {
         resource.setMove(false);
         resource.addInclude("copy1/**/*.txt");
         resource.setDirectory(currentLoc);
-        resource.addPath(new Replace("folder2", "copy2"));
+        resource.addPath(Replace.asReplace("folder2", "copy2"));
         mojo.setResources(new Resource[] { resource });
 
         mojo.execute();
@@ -155,7 +215,7 @@ public class CopyMojoTest {
         resource.setReplaceExisting(true);
         resource.addInclude("copy1/**/*.txt");
         resource.setDirectory(currentLoc);
-        resource.addPath(new Replace("folder2", "copy2"));
+        resource.addPath(Replace.asReplace("folder2", "copy2"));
         mojo.setResources(new Resource[] { resource });
 
         mojo.execute();
@@ -181,7 +241,7 @@ public class CopyMojoTest {
             resource.setMove(false);
             resource.addInclude("copy1/**/*.txt");
             resource.setDirectory(currentLoc);
-            resource.addPath(new Replace("folder2", "copy2"));
+            resource.addPath(Replace.asReplace("folder2", "copy2"));
             mojo.setResources(new Resource[] { resource });
 
             mojo.execute();
@@ -198,7 +258,7 @@ public class CopyMojoTest {
             resource.setMove(true);
             resource.addInclude("copy1/**/*.txt");
             resource.setDirectory(currentLoc);
-            resource.addPath(new Replace("folder2", "copy2"));
+            resource.addPath(Replace.asReplace("folder2", "copy2"));
             mojo.setResources(new Resource[] { resource });
             mojo.execute();
 
@@ -206,35 +266,6 @@ public class CopyMojoTest {
         } catch (Exception ex) {
             Assert.assertTrue(ex.getCause() instanceof FileExistsException);
         }
-    }
-
-    private void cleanup(File file) {
-        if (file != null) {
-            try {
-                if (file.exists()) {
-                    file.delete();
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-
-    }
-
-    @Test
-    public void testNothingToDo() throws MojoExecutionException, MojoFailureException {
-        CopyMojo mojo = new CopyMojo();
-        mojo.setShowfiles(true);
-
-        Resource resource = new Resource();
-        resource.setId("testNothingToDo");
-        resource.addInclude("folder1/**/*.txt");
-        resource.setDirectory(currentLoc);
-        mojo.setResources(new Resource[] { resource });
-
-        mojo.execute();
-
-        Assert.assertTrue(new File(currentLoc + "/folder1/folder2/test1.txt").exists());
     }
 
     @Test
@@ -248,7 +279,7 @@ public class CopyMojoTest {
             resource.setId("testSafeWorkingDir");
             resource.addInclude("folder1/**/*.txt");
             resource.setDirectory(currentLoc);
-            resource.addPath(new Replace(currentLoc, "/tmp"));
+            resource.addPath(Replace.asReplace(currentLoc, "/tmp"));
             mojo.setResources(new Resource[] { resource });
 
             mojo.execute();
@@ -273,8 +304,8 @@ public class CopyMojoTest {
             resource.setWorkOnFullPath(true);
             resource.addInclude("folder1/**/*.txt");
             resource.setDirectory(currentLoc);
-            resource.addPath(new Replace(currentLoc + "/folder1/folder2", "/tmp")).addPath(
-                    new Replace("test1", "test2"));
+            resource.addPath(Replace.asReplace(currentLoc + "/folder1/folder2", "/tmp")).addPath(
+                    Replace.asReplace("test1", "test2"));
             mojo.setResources(new Resource[] { resource });
 
             mojo.execute();

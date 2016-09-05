@@ -31,7 +31,7 @@ public class CopyMojo extends AbstractMojo {
     @Parameter(defaultValue = "false")
     private boolean showfiles;
 
-    @Parameter(defaultValue = "false", required = false, property = "resources.copy.skip")
+    @Parameter(defaultValue = "false", required = false)
     private boolean skip;
 
     private void cleanupEmptyDirs(final File directory) throws IOException {
@@ -166,10 +166,19 @@ public class CopyMojo extends AbstractMojo {
                 throw new MojoExecutionException("From and To cannot be NULL: " + rename);
             } else if (!rename.getFrom().equals(rename.getTo())) {
                 if (resource.isNormalizePath()) {
-                    path = path.replace(FilenameUtils.normalize(rename.getFrom(), true),
-                            FilenameUtils.normalize(rename.getTo(), true));
+                    if (rename.isRegex()) {
+                        path = path.replaceAll(FilenameUtils.normalize(rename.getFrom(), true),
+                                FilenameUtils.normalize(rename.getTo(), true));
+                    } else {
+                        path = path.replace(FilenameUtils.normalize(rename.getFrom(), true),
+                                FilenameUtils.normalize(rename.getTo(), true));
+                    }
                 } else {
-                    path = path.replace(rename.getFrom(), rename.getTo());
+                    if (rename.isRegex()) {
+                        path = path.replaceAll(rename.getFrom(), rename.getTo());
+                    } else {
+                        path = path.replace(rename.getFrom(), rename.getTo());
+                    }
                 }
             }
         }
@@ -205,12 +214,12 @@ public class CopyMojo extends AbstractMojo {
         sb.append("          Paths:").append(System.lineSeparator());
         for (Replace r : resource.getPaths()) {
             sb.append("                  ").append(r.getFrom()).append(" -> ").append(r.getTo())
-                    .append(System.lineSeparator());
+                    .append(r.isRegex() ? " (regex)" : " (replace)").append(System.lineSeparator());
         }
         sb.append("        Replaces:").append(System.lineSeparator());
         for (Replace r : resource.getReplaces()) {
             sb.append("                  ").append(r.getFrom()).append(" -> ").append(r.getTo())
-                    .append(System.lineSeparator());
+                    .append(r.isRegex() ? " (regex)" : " (replace)").append(System.lineSeparator());
         }
         getLog().info(sb);
     }

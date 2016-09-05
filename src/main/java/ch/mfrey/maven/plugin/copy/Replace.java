@@ -17,10 +17,12 @@ public class Replace {
         super();
     }
 
-    public Replace(final String from, final String to) {
-        super();
-        this.from = from;
-        this.to = to;
+    public static Replace asRegex(final String from, final String to) {
+        return new Replace().setFrom(from).setTo(to).setRegex(true);
+    }
+
+    public static Replace asReplace(final String from, final String to) {
+        return new Replace().setFrom(from).setTo(to);
     }
 
     public String getFrom() {
@@ -35,16 +37,19 @@ public class Replace {
         return regex;
     }
 
-    public void setFrom(final String from) {
+    public Replace setFrom(final String from) {
         this.from = from;
+        return this;
     }
 
-    public void setRegex(final boolean regex) {
+    public Replace setRegex(final boolean regex) {
         this.regex = regex;
+        return this;
     }
 
-    public void setTo(final String to) {
+    public Replace setTo(final String to) {
         this.to = to;
+        return this;
     }
 
     @Override

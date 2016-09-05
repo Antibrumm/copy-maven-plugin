@@ -94,36 +94,44 @@ public class Resource extends FileSet {
         return workOnFullPath;
     }
 
-    public void setCharset(final String charset) {
+    public Resource setCharset(final String charset) {
         this.charset = charset;
+        return this;
     }
 
-    public void setId(final String id) {
+    public Resource setId(final String id) {
         this.id = id;
+        return this;
     }
 
-    public void setMove(final boolean move) {
+    public Resource setMove(final boolean move) {
         this.move = move;
+        return this;
     }
 
-    public void setNormalizePath(final boolean normalizePath) {
+    public Resource setNormalizePath(final boolean normalizePath) {
         this.normalizePath = normalizePath;
+        return this;
     }
 
-    public void setPaths(final List<Replace> paths) {
+    public Resource setPaths(final List<Replace> paths) {
         this.paths = paths;
+        return this;
     }
 
-    public void setReplaceExisting(final boolean replaceExisting) {
+    public Resource setReplaceExisting(final boolean replaceExisting) {
         this.replaceExisting = replaceExisting;
+        return this;
     }
 
-    public void setReplaces(final List<Replace> replaces) {
+    public Resource setReplaces(final List<Replace> replaces) {
         this.replaces = replaces;
+        return this;
     }
 
-    public void setWorkOnFullPath(final boolean workOnFullPath) {
+    public Resource setWorkOnFullPath(final boolean workOnFullPath) {
         this.workOnFullPath = workOnFullPath;
+        return this;
     }
 
 }
