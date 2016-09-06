@@ -22,7 +22,7 @@ Usage
 <plugin>
     <groupId>ch.mfrey.maven.plugin</groupId>
     <artifactId>copy-maven-plugin</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.5</version>
     <executions>
         <execution>
             <id>copy</id>
