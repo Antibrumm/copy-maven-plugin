@@ -110,7 +110,7 @@ public class CopyMojo extends AbstractMojo {
                     workingDir = new File(project.getBasedir(), resource.getDirectory() == null ? defaultDir
                             : resource.getDirectory());
                 }
-                if (isShowfiles() && getLog().isInfoEnabled()) {
+                if (getLog().isInfoEnabled()) {
                     logResource(resource, workingDir);
                 }
                 for (File srcFile : getFiles(workingDir, resource)) {
@@ -159,8 +159,10 @@ public class CopyMojo extends AbstractMojo {
         if (resource.isNormalizePath()) {
             path = FilenameUtils.normalize(path, true);
         }
-        getLog().info("---");
-        getLog().info(path);
+        if (isShowfiles()) {
+            getLog().info("---");
+            getLog().info(path);
+        }
         for (Replace rename : renames) {
             if (rename.getFrom() == null || rename.getTo() == null) {
                 throw new MojoExecutionException("From and To cannot be NULL: " + rename);
@@ -182,7 +184,9 @@ public class CopyMojo extends AbstractMojo {
                 }
             }
         }
-        getLog().info(path);
+        if (isShowfiles()) {
+            getLog().info(path);
+        }
         return resource.isWorkOnFullPath() ? path : workingDir.getAbsolutePath() + path;
     }
 
