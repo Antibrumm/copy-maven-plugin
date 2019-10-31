@@ -16,7 +16,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
-@Mojo(name = "copy", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
+@Mojo(name = "copy", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true)
 public class CopyMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project.build.directory}", readonly = true)
