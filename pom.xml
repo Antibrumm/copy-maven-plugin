@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ch.mfrey.maven.plugin</groupId>
 	<artifactId>copy-maven-plugin</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 	<name>Copy Maven Plugin</name>
 	<description>Maven Plugin to copy/move files and replace content in the same time</description>
