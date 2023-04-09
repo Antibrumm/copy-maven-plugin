@@ -13,7 +13,7 @@ Requirements
 ------------
 
  - Java 8
- - Maven 3.2.0+
+ - Maven 3.5.2+
 
 Usage
 -----
