@@ -2,11 +2,22 @@ package ch.mfrey.maven.plugin.copy;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOCase;
+import org.apache.commons.io.filefilter.AbstractFileFilter;
+import org.apache.commons.io.filefilter.FalseFileFilter;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.NotFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -113,7 +124,8 @@ public class CopyMojo extends AbstractMojo {
                 if (getLog().isInfoEnabled()) {
                     logResource(resource, workingDir);
                 }
-                for (File srcFile : getFiles(workingDir, resource)) {
+                final Collection<File> srcFiles = getFiles(workingDir, resource);
+                for (final File srcFile : srcFiles) {
                     String destPath = getNewPath(resource, workingDir, srcFile);
                     File destFile = new File(destPath);
                     if (isShowfiles() && getLog().isInfoEnabled()) {
@@ -138,14 +150,49 @@ public class CopyMojo extends AbstractMojo {
     }
 
     @SuppressWarnings("unchecked")
-    public List<File> getFiles(final File workingDir, final Resource resource) throws MojoExecutionException {
+    public Collection<File> getFiles(final File workingDir, final Resource resource) throws MojoExecutionException {
         try {
-            String includes = !resource.getIncludes().isEmpty() ? String.join(",", resource.getIncludes()) : null;
-            String excludes = !resource.getExcludes().isEmpty() ? String.join(",", resource.getExcludes()) : null;
-            return org.codehaus.plexus.util.FileUtils.getFiles(workingDir, includes, excludes);
-        } catch (IOException e) {
-            throw new MojoExecutionException("Unable to get paths to reprots", e);
+            final IOFileFilter includesFilter = toIOFileFilter(workingDir, resource.getIncludes());
+            final IOFileFilter excludesFilter = toIOFileFilter(workingDir, resource.getExcludes());
+
+            final IOFileFilter listFilter;
+            if (includesFilter == null) {
+                if (excludesFilter == null) {
+                    // no filter
+                    listFilter = FalseFileFilter.INSTANCE;
+                } else {
+                    // excludes only
+                    listFilter = new NotFileFilter(excludesFilter);
+                }
+            } else {
+                if (excludesFilter == null) {
+                    // includes only
+                    listFilter = includesFilter;
+                } else {
+                    // includes and excludes
+                    listFilter = includesFilter.and(new NotFileFilter(excludesFilter));
+                }
+            }
+
+            return FileUtils.listFiles(workingDir, listFilter, TrueFileFilter.INSTANCE);
+
+        } catch (final UncheckedIOException e) {
+            throw new MojoExecutionException("Unable to get paths to copy: " + e.getMessage(), e);
         }
+    }
+
+    private IOFileFilter toIOFileFilter(final File workingDir, final List<String> pathGlobs) {
+        IOFileFilter ioFileFilter = null;
+        if (pathGlobs != null && !pathGlobs.isEmpty()) {
+            for (final String pathGlob : pathGlobs) {
+                if (ioFileFilter == null) {
+                    ioFileFilter = new RelativeWildcardPathFilter(workingDir, pathGlob);
+                } else {
+                    ioFileFilter = ioFileFilter.or(new RelativeWildcardPathFilter(workingDir, pathGlob));
+                }
+            }
+        }
+        return ioFileFilter;
     }
 
     private String getNewPath(final Resource resource, final File workingDir, final File file)
@@ -234,5 +281,41 @@ public class CopyMojo extends AbstractMojo {
 
     public void setShowfiles(final boolean showfiles) {
         this.showfiles = showfiles;
+    }
+
+    private static class RelativeWildcardPathFilter extends AbstractFileFilter {
+
+        private final Path basePath;
+        private final String[] wildcards;
+
+        public RelativeWildcardPathFilter(final File basePath, final String... wildcards) {
+            this.basePath = basePath.toPath();
+            this.wildcards = wildcards;
+        }
+
+        @Override
+        public boolean accept(File file) {
+            return accept(basePath.relativize(file.toPath()));
+        }
+
+        @Override
+        public boolean accept(File dir, String name) {
+            final Path file = dir.toPath().resolve(name);
+            return accept(basePath.relativize(file));
+        }
+
+        @Override
+        public FileVisitResult accept(Path file, BasicFileAttributes attributes) {
+            return accept(basePath.relativize(file)) ? FileVisitResult.CONTINUE : FileVisitResult.TERMINATE;
+        }
+
+        private boolean accept(final Path relativePath) {
+            for (final String wildcard : wildcards) {
+                if (FilenameUtils.wildcardMatch(relativePath.toString(), wildcard, IOCase.SENSITIVE)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }
