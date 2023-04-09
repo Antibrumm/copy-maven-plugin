@@ -7,7 +7,10 @@ Also replaces contents inside the copied files on the fly.
 
 Inspired by the `goldin` `copy-maven-plugin` 
 
-[![Build Status](https://travis-ci.org/Antibrumm/copy-maven-plugin.png)](https://travis-ci.org/Antibrumm/copy-maven-plugin)
+[![Build Status](https://github.com/Antibrumm/copy-maven-plugin/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Antibrumm/copy-maven-plugin/actions/workflows/ci.yml)
+[![Java 8](https://img.shields.io/badge/java-8-blue.svg)](https://adoptopenjdk.net/)
+[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/ch.mfrey.maven.plugin/copy-maven-plugin/badge.svg)](https://search.maven.org/search?q=g:ch.mfrey.maven.plugin)
 
 Requirements
 ------------
@@ -22,7 +25,7 @@ Usage
 <plugin>
     <groupId>ch.mfrey.maven.plugin</groupId>
     <artifactId>copy-maven-plugin</artifactId>
-    <version>0.0.5</version>
+    <version>1.0.0</version>
     <executions>
         <execution>
             <id>copy</id>
